@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import sys
+import os
+import requests
+import re
+import urllib2
+from concurrent import futures
+
+
+def download_kernel_files(url, folder):
+    r = requests.get(url)
+
+    lines = r.text.split('\n')
+    expr = (
+        '<a\s+(?:[^>]*?\s+)?href="([^"]*)">([^"]*)</a>'
+    )
+    prog = re.compile(expr)
+
+    links = []
+    for line in lines:
+        result = prog.search(line)
+        if result:
+            grp1 = result.group(1)
+            grp2 = result.group(2)
+
+            if 'amd64' in grp2 and 'generic' in grp2:
+                links.append(grp2)
+            if 'all' in grp2:
+                links.append(grp2)
+    with futures.ThreadPoolExecutor() as executor:
+        for link in set(links):
+            # Download each file
+            print('Downloading...[%s]' % (link))
+            executor.submit(
+                download_file,
+                os.path.join(url, link),
+                os.path.join(folder, link)
+            )
+
+
+def download_file(url, path):
+    u = urllib2.urlopen(url)
+    index = 0
+    with open(path, 'w') as file:
+        while True:
+            buffer = u.read(8192)
+            if not buffer:
+                break
+            file.write(buffer)
+            if index % 5 == 0:
+                sys.stdout.write('.')
+                sys.stdout.flush()
+            index += 1
+        print('Done.')
+
+
+def main():
+    url = 'http://kernel.ubuntu.com/~kernel-ppa/mainline/'
+    r = requests.get(url)
+    folders = r.text.split('\n')
+
+    expr = (
+        '<a\s+(?:[^>]*?\s+)?href="([^"]*)">([^"]*)</a>'
+    )
+    prog = re.compile(expr)
+
+    folder_list = []
+    for line in folders:
+        result = prog.search(line)
+        if result:
+            folder_list.append((result.group(1), result.group(2)))
+
+    # Get input on selection list
+    selection = int(raw_input('Show selection:'))
+
+
+    selected_list = [[x, False] for x in folder_list[-selection:]]
+    # select download
+    selecting = True
+    while selecting:
+        for i, item in enumerate(selected_list):
+            print(
+                '[%2d] (%s) - %s' % (
+                    i,
+                    '*' if item[1] else ' ', item[0][0]
+                )
+            )
+        value_str = raw_input('Select Downloads or Quit[q]')
+        if value_str == 'q':
+            selecting = False
+            break
+        else:
+            value = int(value_str)
+            selected_list[value][1] = True
+
+    # download each true link
+    with futures.ThreadPoolExecutor() as executor:
+        for item in [x[0] for x in selected_list if x[1]]:
+            if not os.path.isdir(item[1]):
+                os.mkdir(item[1])
+            executor.submit(
+                download_kernel_files,
+                os.path.join(url, item[1]),
+                item[1]
+            )
+
+
+if __name__ == '__main__':
+    main()
