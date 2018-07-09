@@ -74,7 +74,6 @@ def main():
     # Get input on selection list
     selection = int(raw_input('Show selection:'))
 
-
     selected_list = [[x, False] for x in folder_list[-selection:]]
     # select download
     selecting = True
