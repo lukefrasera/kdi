@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "dev": "vue-cli-service serve & sleep 5 && NODE_ENV=DEV electron src/elect_app.js"
+    "dev": "./dev-run.sh"
   },
   "dependencies": {
     "bootstrap-vue": "^2.0.0-rc.11",
