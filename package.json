@@ -10,7 +10,12 @@
   },
   "dependencies": {
     "bootstrap-vue": "^2.0.0-rc.11",
-    "vue": "^2.5.16"
+    "electron-rebuild": "^1.8.1",
+    "node-loader": "^0.6.0",
+    "rclnodejs": "^0.3.5",
+    "vue": "^2.5.16",
+    "zerorpc": "git+https:///github.com/0rpc/zerorpc-node.git",
+    "zmq-jsonrpc": "^0.3.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.0.0-beta.15",
